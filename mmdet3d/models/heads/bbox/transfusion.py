@@ -270,7 +270,9 @@ class TransFusionHead(nn.Module):
         top_proposals = heatmap.view(batch_size, -1).argsort(dim=-1, descending=True)[
             ..., : self.num_proposals
         ]
-        top_proposals_class = top_proposals // heatmap.shape[-1]
+        # top_proposals_class = top_proposals // heatmap.shape[-1]
+        # top_proposals_class = torch.div(top_proposals, heatmap.shape[-1], rounding_mode='floor')
+        top_proposals_class = torch.div(top_proposals, heatmap.shape[-1], rounding_mode='trunc')
         top_proposals_index = top_proposals % heatmap.shape[-1]
         query_feat = lidar_feat_flatten.gather(
             index=top_proposals_index[:, None, :].expand(

@@ -69,16 +69,24 @@ The code is built with following libraries:
 
 - Python >= 3.8, \<3.9
 - OpenMPI = 4.0.4 and mpi4py = 3.0.3 (Needed for torchpack) (conda install -c conda-forge mpi4py openmpi)
+- 测试mpi4py是否安装成功 (mpiexec -np 8 python br_test/test_mpi4py.py)
+- llvm  (conda install -c conda-forge llvmlite会报llvm的错，使用conda install --channel=numba llvmlite后问题解决) 安装numba前安装llvmlite
+- numba   (conda install numba)  numpy版本需要低于1.23.5  (conda install -c conda-forge numba)
 - Pillow = 8.4.0 (see [here](https://github.com/mit-han-lab/bevfusion/issues/63))
 - [PyTorch](https://github.com/pytorch/pytorch) >= 1.9, \<= 1.10.2
-- [tqdm](https://github.com/tqdm/tqdm)
-- [torchpack](https://github.com/mit-han-lab/torchpack)
-- [mmcv](https://github.com/open-mmlab/mmcv) = 1.4.0
-- [mmdetection](http://github.com/open-mmlab/mmdetection) = 2.20.0
-- [nuscenes-dev-kit](https://github.com/nutonomy/nuscenes-devkit)
+- (conda install pytorch==1.10.0 torchvision==0.11.0 torchaudio==0.10.0 cudatoolkit=11.3 -c pytorch -c conda-forge)
+- 这句实际安装了cudatoolkit的二进制binaries链接库在/home/rui.bai/anaconda3/pkgs/cudatoolkit-11.3.1-h9edb442_10
+- [tqdm](https://github.com/tqdm/tqdm)  (conda install -c conda-forge tqdm)
+- [torchpack](https://github.com/mit-han-lab/torchpack)  (pip install torchpack)
+- [mmcv](https://github.com/open-mmlab/mmcv) = 1.4.0   (pip install -U openmim;   mim install mmcv-full==1.4.0不可以， 使用pip install mmcv-full==1.4.0 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10/index.html)
+- [mmdetection](http://github.com/open-mmlab/mmdetection) = 2.20.0   (pip install mmdet==2.20.0)
+- [nuscenes-dev-kit](https://github.com/nutonomy/nuscenes-devkit) (pip install nuscenes-devkit)
+- [ninja] (conda install -c conda-forge ninja)
+
 
 After installing these dependencies, please run this command to install the codebase:
 
+(https://developer.nvidia.com/cuda-gpus)  GeForce RTX 3090  compute 8.6
 ```bash
 python setup.py develop
 ```
@@ -146,14 +154,31 @@ torchpack dist-run -np 8 python tools/test.py [config file path] pretrained/[che
 
 For example, if you want to evaluate the detection variant of BEVFusion, you can try:
 
+mmdet3d/ops/spconv/src/indice_cuda.cu 中的4096改为了256
+
+运行det会报错 
+File "/home/rui.bai/bairui_file/bevfusion/mmdet3d/ops/spconv/ops.py", line 92, in get_indice_pairs
+    return get_indice_pairs_func(
+RuntimeError: /home/rui.bai/bairui_file/bevfusion/mmdet3d/ops/spconv/include/tensorview/helper_launch.h 17
+N > 0 assert faild. CUDA kernel launch blocks must be positive, but got N= 0
+```
+torchpack dist-run -np 1 python tools/test.py configs/nuscenes/det/transfusion/secfpn/camera+lidar/swint_v0p075/convfuser.yaml pretrained/bevfusion-det.pth --eval bbox
+```
+
 ```bash
-torchpack dist-run -np 8 python tools/test.py configs/nuscenes/det/transfusion/secfpn/camera+lidar/swint_v0p075/convfuser.yaml pretrained/bevfusion-det.pth --eval bbox
+torchpack dist-run -np 4 python tools/test.py configs/nuscenes/det/transfusion/secfpn/camera+lidar/swint_v0p075/convfuser.yaml pretrained/bevfusion-det.pth --eval bbox
 ```
 
 While for the segmentation variant of BEVFusion, this command will be helpful:
 
+运行torchpack dist-run -np 1 可以输出结果
 ```bash
-torchpack dist-run -np 8 python tools/test.py configs/nuscenes/seg/fusion-bev256d2-lss.yaml pretrained/bevfusion-seg.pth --eval map
+torchpack dist-run -np 1 python tools/test.py configs/nuscenes/seg/fusion-bev256d2-lss.yaml pretrained/bevfusion-seg.pth --eval map | tee output1.txt
+```
+
+运行torchpack dist-run -np 4时会报错   [>>] 84/81, 2.7 task/s, elapsed: 31s, ETA:     0s^C  卡死
+```bash
+torchpack dist-run -np 4 python tools/test.py configs/nuscenes/seg/fusion-bev256d2-lss.yaml pretrained/bevfusion-seg.pth --eval map
 ```
 
 ### Training

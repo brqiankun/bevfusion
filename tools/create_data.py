@@ -1,5 +1,13 @@
 import argparse
 
+# from llvmlite import binding
+# binding.initialize()
+# binding.initialize_all_targets() 
+# otherwise llvmlite's targets.py throws RuntimeError: Unable to find target for this triple (no targets are registered) from github bevfusion
+# 这个问题在重装llvmlite后解决 conda install --channel=numba llvmlite后问题解决  添加后反而seg报错
+# RuntimeError: /home/rui.bai/bairui_file/bevfusion/mmdet3d/ops/spconv/include/tensorview/helper_launch.h 17
+# N > 0 assert faild. CUDA kernel launch blocks must be positive, but got N= 0
+
 from data_converter import nuscenes_converter as nuscenes_converter
 from data_converter.create_gt_database import create_groundtruth_database
 
