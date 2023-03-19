@@ -12,3 +12,5 @@ elif rank == 1:
     print("rank %d: %s" % (rank, s))
 else:
     print("rank %d: idle" % (rank))
+
+# mpiexec -np 8 python test_mpi4py.py
